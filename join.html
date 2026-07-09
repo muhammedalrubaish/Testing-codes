@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>انضم إلينا | منصة صافي</title>
+  <meta name="description" content="سجّل في منصة صافي كتاجر جملة أو تاجر تجزئة أو عميل نهائي وابدأ البيع والشراء في سوق الإلكترونيات المتكامل." />
+  <meta name="theme-color" content="#1463f3" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="assets/img/favicon.svg" alt="شعار صافي" class="brand-icon" />
+        <span>صافي<small>سوق الإلكترونيات المتكامل</small></span>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <a href="index.html">الرئيسية</a>
+        <a href="market.html">السوق</a>
+        <a href="index.html#how">كيف تعمل المنصة</a>
+        <a href="index.html#plans">الباقات</a>
+        <a href="join.html" class="active">انضم إلينا</a>
+      </nav>
+      <div class="header-actions">
+        <a href="market.html" class="btn btn-primary btn-sm">تسوّق الآن</a>
+        <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container join-wrap">
+    <div class="section-head">
+      <span class="eyebrow">انضم إلى صافي</span>
+      <h2>اختر دورك في سلسلة البيع</h2>
+      <p>سجّل خلال دقائق وابدأ البيع أو الشراء في سوق الإلكترونيات المتكامل.</p>
+    </div>
+
+    <div class="join-cards" id="joinCards">
+      <div class="join-card" data-role="wholesale">
+        <div class="j-icon">🏭</div>
+        <h3>تاجر جملة</h3>
+        <p>اعرض منتجاتك لآلاف متاجر التجزئة وأدر مخزونك وطلباتك من لوحة واحدة.</p>
+      </div>
+      <div class="join-card" data-role="retail">
+        <div class="j-icon">🏬</div>
+        <h3>تاجر تجزئة</h3>
+        <p>اشترِ بأفضل أسعار الجملة وافتح متجرك الإلكتروني وبِع للعملاء مباشرة.</p>
+      </div>
+      <div class="join-card" data-role="customer">
+        <div class="j-icon">🛒</div>
+        <h3>عميل نهائي</h3>
+        <p>قارن الأسعار بين المتاجر واشترِ بأمان وتتبّع طلبك حتى الاستلام.</p>
+      </div>
+    </div>
+
+    <form class="join-form" id="joinForm">
+      <h3 id="formTitle">تسجيل عميل</h3>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="fullName">الاسم الكامل</label>
+          <input id="fullName" type="text" required />
+        </div>
+        <div class="form-field">
+          <label for="phone">رقم الجوال</label>
+          <input id="phone" type="tel" dir="ltr" placeholder="+966 5X XXX XXXX" required />
+        </div>
+        <div class="form-field">
+          <label for="email">البريد الإلكتروني</label>
+          <input id="email" type="email" dir="ltr" required />
+        </div>
+        <div class="form-field">
+          <label for="city">المدينة</label>
+          <select id="city" required>
+            <option value="">اختر المدينة</option>
+            <option>الرياض</option>
+            <option>جدة</option>
+            <option>الدمام</option>
+            <option>مكة المكرمة</option>
+            <option>المدينة المنورة</option>
+            <option>أخرى</option>
+          </select>
+        </div>
+        <div id="extraFields" style="display: contents;"></div>
+        <div class="form-field full">
+          <label for="password">كلمة المرور</label>
+          <input id="password" type="password" minlength="8" required />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary">إنشاء الحساب</button>
+      <div class="form-success" id="formSuccess">
+        ✓ تم استلام طلب التسجيل بنجاح! هذه نسخة تجريبية للعرض — سيتم تفعيل الحسابات مع إطلاق المنصة.
+      </div>
+    </form>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 منصة صافي — جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
