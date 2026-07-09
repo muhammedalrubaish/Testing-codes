@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم | منصة صافي</title>
+  <meta name="description" content="لوحة تحكم توضيحية لتاجر على منصة صافي: المبيعات، الطلبات، وإدارة المخزون." />
+  <meta name="theme-color" content="#1463f3" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="assets/img/favicon.svg" alt="شعار صافي" class="brand-icon" />
+        <span>صافي<small>سوق الإلكترونيات المتكامل</small></span>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <a href="index.html">الرئيسية</a>
+        <a href="market.html">السوق</a>
+        <a href="dashboard.html" class="active">لوحة التحكم</a>
+        <a href="index.html#plans">الباقات</a>
+        <a href="join.html">انضم إلينا</a>
+      </nav>
+      <div class="header-actions">
+        <a href="market.html" class="btn btn-primary btn-sm">تسوّق الآن</a>
+        <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container dash-wrap">
+    <div class="dash-head">
+      <div>
+        <h1>لوحة تحكم التاجر</h1>
+        <span class="store-name">متجر التقنية الأول — الرياض · تاجر تجزئة</span>
+      </div>
+      <span class="demo-badge">نسخة توضيحية — بيانات تجريبية</span>
+    </div>
+
+    <!-- مؤشرات الأداء -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="k-label">مبيعات اليوم</div>
+        <div class="k-value" id="kpiSales">١٢٬٤٥٠ <small>ر.س</small></div>
+        <span class="k-delta up">▲ %8 عن أمس</span>
+      </div>
+      <div class="kpi">
+        <div class="k-label">طلبات جديدة</div>
+        <div class="k-value">٢٣ <small>طلبًا</small></div>
+        <span class="k-delta up">▲ 5 خلال آخر ساعة</span>
+      </div>
+      <div class="kpi">
+        <div class="k-label">منتجات منخفضة المخزون</div>
+        <div class="k-value">٣ <small>منتجات</small></div>
+        <span class="k-delta warn">⚠ تحتاج إعادة طلب من الجملة</span>
+      </div>
+      <div class="kpi">
+        <div class="k-label">تقييم المتجر</div>
+        <div class="k-value">4.8 <small>من 5</small></div>
+        <span class="k-delta up">▲ من ٦٤٢ تقييمًا</span>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- مخطط المبيعات -->
+      <div class="panel">
+        <h2>مبيعات آخر ٧ أيام</h2>
+        <p class="p-sub">إجمالي مبيعات المتجر بالريال السعودي — مرّر على الأعمدة للتفاصيل.</p>
+        <div class="chart-box" id="salesChart"></div>
+      </div>
+
+      <!-- أحدث الطلبات -->
+      <div class="panel">
+        <h2>أحدث الطلبات</h2>
+        <p class="p-sub">آخر الطلبات الواردة من عملاء المنصة.</p>
+        <div class="table-scroll">
+          <table class="dash-table" id="ordersTable">
+            <thead><tr><th>الطلب</th><th>المنتج</th><th>المبلغ</th><th>الحالة</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- إدارة المخزون -->
+    <div class="panel">
+      <h2>إدارة المخزون</h2>
+      <p class="p-sub">مستويات المخزون الحالية — المنتجات المنخفضة يمكن إعادة طلبها من تجار الجملة مباشرة عبر المنصة.</p>
+      <div class="table-scroll">
+        <table class="dash-table" id="stockTable">
+          <thead><tr><th>المنتج</th><th>سعر البيع</th><th>المخزون</th><th>المستوى</th><th>الحالة</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 منصة صافي — جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
