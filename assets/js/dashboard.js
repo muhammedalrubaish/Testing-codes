@@ -132,8 +132,69 @@ function renderStock() {
     .join("");
 }
 
+/* ---------- محاكاة الطلبات الواردة (نسخة توضيحية) ---------- */
+const dashState = { sales: 12450, newOrders: 23 };
+let orderSeq = 10483;
+let liveRunning = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let liveTimer = null;
+
+function updateKpis() {
+  const salesEl = document.getElementById("kpiSalesValue");
+  const ordersEl = document.getElementById("kpiNewOrders");
+  const lowStockEl = document.getElementById("kpiLowStock");
+  if (salesEl) salesEl.textContent = fmt(dashState.sales);
+  if (ordersEl) ordersEl.textContent = fmt(dashState.newOrders);
+  if (lowStockEl) lowStockEl.textContent = fmt(DASH_DATA.stock.filter((s) => s.qty < s.min).length);
+}
+
+function spawnLiveOrder() {
+  const candidates = DASH_DATA.stock.filter((s) => s.qty > 0);
+  if (!candidates.length) return;
+  const item = candidates[Math.floor(Math.random() * candidates.length)];
+  item.qty = Math.max(0, item.qty - 1);
+
+  const status = Math.random() < 0.5 ? "new" : "prep";
+  DASH_DATA.orders.unshift({ id: `#${orderSeq++}`, product: item.name, amount: item.price, status });
+  DASH_DATA.orders = DASH_DATA.orders.slice(0, 8);
+
+  dashState.sales += item.price;
+  dashState.newOrders += 1;
+
+  renderOrders();
+  renderStock();
+  updateKpis();
+
+  const firstRow = document.querySelector("#ordersTable tbody tr");
+  if (firstRow) firstRow.classList.add("row-flash");
+}
+
+function scheduleLiveOrder(first) {
+  if (!liveRunning) return;
+  const delay = first ? 2200 + Math.random() * 1500 : 5000 + Math.random() * 5000;
+  liveTimer = setTimeout(() => {
+    spawnLiveOrder();
+    scheduleLiveOrder(false);
+  }, delay);
+}
+
+function initLiveOrders() {
+  const toggle = document.getElementById("liveToggle");
+  if (toggle) {
+    toggle.textContent = liveRunning ? "⏸ إيقاف البث المباشر" : "▶ تشغيل البث المباشر";
+    toggle.addEventListener("click", () => {
+      liveRunning = !liveRunning;
+      toggle.textContent = liveRunning ? "⏸ إيقاف البث المباشر" : "▶ تشغيل البث المباشر";
+      if (liveRunning) scheduleLiveOrder(true);
+      else clearTimeout(liveTimer);
+    });
+  }
+  if (liveRunning) scheduleLiveOrder(true);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   renderSalesChart();
   renderOrders();
   renderStock();
+  updateKpis();
+  initLiveOrders();
 });

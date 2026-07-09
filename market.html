@@ -62,6 +62,12 @@
     </div>
     <p class="market-note" id="marketNote">تعرض الأسعار أدناه أفضل عروض متاجر التجزئة للعملاء النهائيين.</p>
 
+    <div class="live-sim-bar">
+      <span class="live-dot"></span>
+      <span id="liveCountText">٨١٢ عملية شراء خلال الساعة الأخيرة</span>
+      <button class="btn btn-outline btn-sm" id="simToggle">⏸ إيقاف المحاكاة</button>
+    </div>
+
     <div class="products-grid" id="productsGrid"></div>
   </div>
 
@@ -80,6 +86,9 @@
     </div>
   </div>
 
+  <!-- إشعارات محاكاة الشراء -->
+  <div class="buy-toast-stack" id="buyToastStack" aria-live="polite"></div>
+
   <footer class="site-footer">
     <div class="container">
       <div class="footer-bottom">© 2026 منصة صافي — جميع الحقوق محفوظة</div>
@@ -88,5 +97,6 @@
 
   <script src="assets/js/data.js"></script>
   <script src="assets/js/app.js"></script>
+  <script src="assets/js/buyer-sim.js"></script>
 </body>
 </html>
