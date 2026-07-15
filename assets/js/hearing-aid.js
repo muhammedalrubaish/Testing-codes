@@ -83,13 +83,13 @@ async function startHearingAid({ gain, clarity, noiseSuppression }) {
     haGainNode = haAudioContext.createGain();
     haGainNode.gain.value = Math.min(gain, HA_MAX_SAFE_GAIN);
 
-    // محدد ذروة يمنع وصول أصوات مفاجئة عالية الشدة لحماية السمع (مهم أكثر مع مستويات التكبير العالية)
+    // محدد ذروة يمنع فقط الذروات القريبة من التشبّع (لا يكتم التكبير العادي للصوت الخافت/البعيد)
     haLimiterNode = haAudioContext.createDynamicsCompressor();
-    haLimiterNode.threshold.value = -30;
-    haLimiterNode.knee.value = 10;
+    haLimiterNode.threshold.value = -8;
+    haLimiterNode.knee.value = 8;
     haLimiterNode.ratio.value = 20;
     haLimiterNode.attack.value = 0.001;
-    haLimiterNode.release.value = 0.2;
+    haLimiterNode.release.value = 0.15;
 
     haAnalyserNode = haAudioContext.createAnalyser();
     haAnalyserNode.fftSize = 256;
