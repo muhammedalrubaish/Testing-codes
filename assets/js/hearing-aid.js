@@ -10,7 +10,7 @@ let haAnalyserNode = null;
 let haMeterRafId = null;
 let haRunning = false;
 
-const HA_MAX_SAFE_GAIN = 10;
+const HA_MAX_SAFE_GAIN = 30;
 
 document.addEventListener("DOMContentLoaded", () => {
   const toggleBtn = document.getElementById("haToggleBtn");
@@ -66,7 +66,8 @@ async function startHearingAid({ gain, clarity, noiseSuppression }) {
       audio: {
         echoCancellation: false,
         noiseSuppression,
-        autoGainControl: false,
+        // يرفع المتصفح حساسية الميكروفون تلقائيًا للأصوات الخافتة أو البعيدة
+        autoGainControl: true,
       },
     });
 
@@ -82,13 +83,13 @@ async function startHearingAid({ gain, clarity, noiseSuppression }) {
     haGainNode = haAudioContext.createGain();
     haGainNode.gain.value = Math.min(gain, HA_MAX_SAFE_GAIN);
 
-    // محدد ذروة يمنع وصول أصوات مفاجئة عالية الشدة لحماية السمع
+    // محدد ذروة يمنع وصول أصوات مفاجئة عالية الشدة لحماية السمع (مهم أكثر مع مستويات التكبير العالية)
     haLimiterNode = haAudioContext.createDynamicsCompressor();
-    haLimiterNode.threshold.value = -18;
-    haLimiterNode.knee.value = 6;
-    haLimiterNode.ratio.value = 12;
-    haLimiterNode.attack.value = 0.003;
-    haLimiterNode.release.value = 0.15;
+    haLimiterNode.threshold.value = -30;
+    haLimiterNode.knee.value = 10;
+    haLimiterNode.ratio.value = 20;
+    haLimiterNode.attack.value = 0.001;
+    haLimiterNode.release.value = 0.2;
 
     haAnalyserNode = haAudioContext.createAnalyser();
     haAnalyserNode.fftSize = 256;
