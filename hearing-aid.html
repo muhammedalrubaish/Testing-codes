@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مكبّر السمع | صافي — تقوية الصوت وتوضيح الأصوات لحظيًا</title>
+  <meta name="description" content="أداة مكبّر سمع تعمل داخل المتصفح: تلتقط الصوت من الميكروفون، تكبّره وتوضّح صوت الحديث، وتُخرجه لحظيًا إلى سماعتك." />
+  <meta name="theme-color" content="#1463f3" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- الترويسة -->
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="brand">
+        <img src="assets/img/favicon.svg" alt="شعار صافي" class="brand-icon" />
+        <span>صافي<small>سوق الإلكترونيات المتكامل</small></span>
+      </a>
+      <nav class="main-nav" id="mainNav">
+        <a href="index.html">الرئيسية</a>
+        <a href="market.html">السوق</a>
+        <a href="dashboard.html">لوحة التحكم</a>
+        <a href="hearing-aid.html" class="active">مكبّر السمع</a>
+        <a href="join.html">انضم إلينا</a>
+      </nav>
+      <div class="header-actions">
+        <a href="market.html" class="btn btn-primary btn-sm">تسوّق الآن</a>
+        <button class="nav-toggle" aria-label="فتح القائمة">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- بطل الصفحة -->
+  <section class="market-hero">
+    <div class="container">
+      <h1>🎧 مكبّر السمع — كبّر الصوت ووضّح الحديث لحظيًا</h1>
+      <p>يستخدم ميكروفون جهازك لالتقاط الأصوات المحيطة، يكبّرها ويوضّح ترددات الكلام، ثم يرسلها فورًا إلى سماعتك.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="ha-layout">
+
+        <!-- بطاقة التحكم -->
+        <div class="ha-card">
+          <div class="ha-status">
+            <span class="ha-dot" id="haDot"></span>
+            <span id="haStatusText">غير مُفعّل</span>
+          </div>
+
+          <button class="btn btn-primary ha-toggle" id="haToggleBtn">▶ تشغيل مكبّر السمع</button>
+
+          <div class="ha-meter" aria-hidden="true">
+            <div class="ha-meter-fill" id="haMeterFill"></div>
+          </div>
+
+          <div class="ha-control">
+            <label for="haGain">مستوى التكبير <b id="haGainValue">×3.0</b></label>
+            <input type="range" id="haGain" min="1" max="10" step="0.1" value="3" />
+          </div>
+
+          <div class="ha-control">
+            <label class="ha-switch">
+              <input type="checkbox" id="haClarity" checked />
+              <span>توضيح صوت الحديث (تعزيز ترددات الكلام)</span>
+            </label>
+          </div>
+
+          <div class="ha-control">
+            <label class="ha-switch">
+              <input type="checkbox" id="haNoise" checked />
+              <span>تقليل الضجيج الخلفي</span>
+            </label>
+          </div>
+
+          <p class="ha-error" id="haError"></p>
+        </div>
+
+        <!-- بطاقة الإرشادات -->
+        <div class="ha-info">
+          <h3>كيف تعمل الأداة؟</h3>
+          <ul class="ha-steps">
+            <li><b>1.</b> لا بد من استخدام <b>سماعة رأس أو أذن</b> — استخدام مكبرات الصوت الخارجية يسبب صدى وصفيرًا (تغذية راجعة).</li>
+            <li><b>2.</b> اضغط «تشغيل» وسيطلب المتصفح إذن استخدام الميكروفون، وافق للمتابعة.</li>
+            <li><b>3.</b> اضبط مستوى التكبير حسب حاجتك، وفعّل «توضيح الحديث» لإبراز صوت الكلام على الضجيج.</li>
+            <li><b>4.</b> يعمل الصوت بشكل لحظي داخل المتصفح فقط، ولا يُسجَّل أو يُرسَل لأي خادم.</li>
+          </ul>
+          <div class="ha-warn">
+            ⚠️ هذه أداة تكبير صوت رقمية للاستخدام العام، وليست بديلاً عن سمّاعة طبية معتمدة. إن كان لديك ضعف سمع، استشر أخصائي سمعيات. تجنّب رفع مستوى التكبير لفترات طويلة حفاظًا على سمعك.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- التذييل -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a href="index.html" class="brand">
+            <img src="assets/img/favicon.svg" alt="شعار صافي" class="brand-icon" />
+            <span>صافي</span>
+          </a>
+          <p>سوق إلكتروني متكامل ومتخصص في الإلكترونيات، يربط سلسلة البيع كاملة من المورد إلى المستهلك النهائي.</p>
+        </div>
+        <div>
+          <h5>المنصة</h5>
+          <ul>
+            <li><a href="market.html">السوق</a></li>
+            <li><a href="hearing-aid.html">مكبّر السمع</a></li>
+            <li><a href="index.html#plans">الباقات</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>انضم إلينا</h5>
+          <ul>
+            <li><a href="join.html?role=wholesale">تاجر جملة</a></li>
+            <li><a href="join.html?role=retail">تاجر تجزئة</a></li>
+            <li><a href="join.html?role=customer">عميل</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>تواصل معنا</h5>
+          <ul>
+            <li><a href="mailto:info@safi.example">info@safi.example</a></li>
+            <li>الدعم الفني: على مدار الساعة</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">© 2026 منصة صافي — جميع الحقوق محفوظة</div>
+    </div>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/hearing-aid.js"></script>
+</body>
+</html>
