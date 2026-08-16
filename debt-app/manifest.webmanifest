@@ -1,0 +1,17 @@
+{
+  "name": "تحصيل الديون — ربى الوكيل القانوني",
+  "short_name": "تحصيل",
+  "description": "تطبيق جوال لإدارة ملفات العملاء والديون وإرسال رسائل الترحيب والتذكير بالسداد عبر واتساب مع سند إثبات.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6ea",
+  "theme_color": "#667439",
+  "icons": [
+    { "src": "assets/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
