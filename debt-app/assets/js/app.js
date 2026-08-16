@@ -50,16 +50,37 @@
 
   /* ==================== الورقة المنبثقة ==================== */
   function openSheet(html) {
+    const sheet = $('#sheet');
     $('#sheetBody').innerHTML = html;
-    $('#sheet').classList.add('open');
+    sheet.scrollTop = 0;
+    sheet.classList.add('open');
     $('#backdrop').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.documentElement.classList.add('sheet-open');
   }
   function closeSheet() {
     $('#sheet').classList.remove('open');
     $('#backdrop').classList.remove('open');
+    document.documentElement.classList.remove('sheet-open');
     document.body.style.overflow = '';
   }
+  const sheetIsOpen = () => $('#sheet').classList.contains('open');
+
+  /**
+   * شبكة أمان: أي خطأ داخل معالج حدث كان يترك الواجهة مقفلة (الصفحة لا تتمرر
+   * والورقة لا تُغلق) فيبدو التطبيق «معلّقًا». هنا نغلق الورقة ونحرّر التمرير.
+   */
+  function unstick(err) {
+    if (err) console.error(err);
+    closeSheet();
+    toast('حدث خطأ غير متوقع — أعد المحاولة');
+  }
+  const guard = fn => (...args) => {
+    try {
+      const r = fn(...args);
+      if (r && typeof r.catch === 'function') r.catch(unstick);
+      return r;
+    } catch (e) { unstick(e); }
+  };
 
   /* ==================== التنقل ==================== */
   function go(tab) {
@@ -154,7 +175,8 @@
 
   function renderHome() {
     const cs = Store.clients();
-    const out = cs.reduce((s, c) => s + Store.remainingOf(c), 0);
+    // الملفات المعلَّمة كمسدَّدة لا تُحتسب ضمن المستحقات القائمة
+    const out = cs.reduce((s, c) => s + (Store.statusOf(c) === 'paid' ? 0 : Store.remainingOf(c)), 0);
     const paid = cs.reduce((s, c) => s + Store.paidOf(c), 0);
     $('#statOutstanding').textContent = `${money(out)} ${cur()}`;
     $('#statCollected').textContent = money(paid);
@@ -194,14 +216,18 @@
   }
 
   function clientRow(c) {
-    const st = STATUS[Store.statusOf(c)];
+    const status = Store.statusOf(c);
+    const st = STATUS[status];
+    const done = status === 'paid';
     const rem = Store.remainingOf(c);
-    const node = el('div', 'client', `
-      <div class="avatar">${esc((c.name || '؟').trim().charAt(0))}</div>
+    const node = el('div', 'client' + (done ? ' done' : ''), `
+      <button class="mark ${done ? 'on' : ''}" title="${done ? 'تم السداد بالكامل' : 'تعليم كمسدَّد بالكامل'}">
+        <svg><use href="#i-check"/></svg>
+      </button>
       <div class="info">
-        <b>${esc(c.name)}</b>
+        <b>${esc(c.name)}${done ? ' <svg class="done-badge"><use href="#i-badge"/></svg>' : ''}</b>
         <div class="meta">
-          <span>هوية: ${esc(c.nationalId || '—')}</span>
+          ${c.nationalId ? `<span>هوية: ${esc(c.nationalId)}</span>` : ''}
           <span dir="ltr">${esc(c.phone || '—')}</span>
         </div>
       </div>
@@ -210,7 +236,71 @@
         <span class="pill ${st.cls}">${st.label}</span>
       </div>`);
     node.addEventListener('click', () => openClient(c.id));
+    node.querySelector('.mark').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleSettled(c.id);
+    });
     return node;
+  }
+
+  /** تعليم الملف كمسدَّد بالكامل / التراجع */
+  function toggleSettled(id) {
+    const c = Store.client(id);
+    if (!c) return;
+    if (c.settled) {
+      // نحذف أيضًا دفعة التسوية التي أُنشئت تلقائيًا عند التعليم، وإلا بقي
+      // الملف مسدَّدًا حسب سجل الدفعات ولم يتغيّر شيء ظاهريًا بعد الإلغاء
+      (c.payments || []).filter(p => p.auto).forEach(p => Store.removePayment(id, p.id));
+      Store.setSettled(id, false);
+      toast('تم إرجاع الملف إلى المديونيات القائمة');
+      refresh();
+      return;
+    }
+    if (Store.statusOf(c) === 'paid') {
+      toast('الملف مسدَّد بالكامل حسب سجل الدفعات');
+      return;
+    }
+    const rem = Store.remainingOf(c);
+    openSheet(`
+      <h3>تأكيد السداد الكامل</h3>
+      <p class="sub">${esc(c.name)}</p>
+      <p style="font-size:13.5px;color:var(--ink-soft);line-height:1.9">
+        سيتم تعليم الملف كـ <b>مسدَّد بالكامل</b> وإخفاؤه من قائمة المديونيات القائمة.
+        ${rem > 0 ? `المتبقي الحالي <b>${money(rem)} ${esc(cur())}</b>.` : ''}
+      </p>
+      ${rem > 0 ? `
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:600">
+          <input type="checkbox" id="s-pay" style="width:auto" checked />
+          تسجيل المتبقي كدفعة أخيرة (${money(rem)} ${esc(cur())})
+        </label>
+        <div class="hint">يبقى سجل الدفعات مطابقًا لإجمالي المديونية، ويمكن إصدار سند إخلاء طرف.</div>
+      </div>` : ''}
+      <div class="sheet-actions">
+        <button class="btn outline" data-x="cancel">إلغاء</button>
+        <button class="btn" data-x="ok"><svg><use href="#i-check"/></svg> تأكيد</button>
+      </div>`);
+    const body = $('#sheetBody');
+    body.querySelector('[data-x="cancel"]').addEventListener('click', closeSheet);
+    body.querySelector('[data-x="ok"]').addEventListener('click', () => {
+      const withPay = rem > 0 && $('#s-pay') && $('#s-pay').checked;
+      if (withPay) {
+        Store.addPayment(id, {
+          amount: rem, date: todayISO(), method: 'تسوية نهائية',
+          note: 'سداد كامل المتبقي', auto: true
+        });
+      }
+      Store.setSettled(id, true);
+      closeSheet();
+      toast('تم تعليم الملف كمسدَّد بالكامل');
+      refresh();
+    });
+  }
+
+  /** إعادة رسم الشاشة الحالية أيًّا كانت */
+  function refresh() {
+    if (state.currentClient) renderClientDetail(state.currentClient);
+    else render();
   }
 
   /* ==================== تفاصيل العميل ==================== */
@@ -219,7 +309,9 @@
     if (!c) { go('clients'); return; }
     const paid = Store.paidOf(c), rem = Store.remainingOf(c);
     const pct = c.total > 0 ? Math.min(100, Math.round(paid / c.total * 100)) : 0;
-    const st = STATUS[Store.statusOf(c)];
+    const status = Store.statusOf(c);
+    const st = STATUS[status];
+    const done = status === 'paid';
     const late = Store.daysLate(c);
 
     const payments = (c.payments || []).map(p => `
@@ -235,15 +327,17 @@
 
     $('#scr-client').innerHTML = `
       <div class="detail-head">
-        <div class="avatar">${esc((c.name || '؟').trim().charAt(0))}</div>
+        <div class="avatar${done ? ' done' : ''}">${done
+          ? '<svg style="width:26px;height:26px"><use href="#i-badge"/></svg>'
+          : esc((c.name || '؟').trim().charAt(0))}</div>
         <div style="flex:1;min-width:0">
           <b>${esc(c.name)}</b>
-          <span>هوية: ${esc(c.nationalId || '—')} · <span dir="ltr">${esc(c.phone || '—')}</span></span>
+          <span>${c.nationalId ? 'هوية: ' + esc(c.nationalId) + ' · ' : ''}<span dir="ltr">${esc(c.phone || '—')}</span></span>
         </div>
         <span class="pill ${st.cls}">${st.label}${st.cls === 'late' ? ' ' + late + ' يوم' : ''}</span>
       </div>
 
-      <div class="card hero">
+      <div class="card hero${done ? ' done' : ''}">
         <div class="label">المتبقي في الذمة</div>
         <div class="amount">${money(rem)} ${esc(cur())}</div>
         <div class="progress"><i style="width:${pct}%"></i></div>
@@ -276,6 +370,11 @@
         <svg><use href="#i-wa"/></svg> فتح محادثة واتساب مباشرة
       </button>
 
+      <button class="btn ${done ? 'outline' : 'ghost'} block" style="margin-top:10px" data-settle="1">
+        <svg><use href="#i-check"/></svg>
+        ${done ? 'إلغاء تعليم السداد الكامل' : 'تعليم كمسدَّد بالكامل'}
+      </button>
+
       <div class="section-title">بيانات الملف</div>
       <div class="card">
         <div class="kv"><span>تاريخ الاستحقاق</span><b>${fmtDate(c.dueDate)}</b></div>
@@ -298,13 +397,14 @@
     const scr = $('#scr-client');
     scr.querySelectorAll('[data-send]').forEach(b =>
       b.addEventListener('click', () => composeMessage(c.id, b.dataset.send)));
-    scr.querySelector('[data-proofsend]').addEventListener('click', () => proofFlow(c.id));
+    scr.querySelector('[data-proofsend]').addEventListener('click', guard(() => proofFlow(c.id)));
     scr.querySelector('[data-openwa]').addEventListener('click', () => openWhatsApp(c.phone, ''));
+    scr.querySelector('[data-settle]').addEventListener('click', () => toggleSettled(c.id));
     scr.querySelector('[data-addpay]').addEventListener('click', () => paymentForm(c.id));
     scr.querySelector('[data-edit]').addEventListener('click', () => clientForm(c.id));
     scr.querySelector('[data-del]').addEventListener('click', () => confirmDelete(c.id));
     scr.querySelectorAll('[data-proof]').forEach(b =>
-      b.addEventListener('click', () => proofFlow(c.id, b.dataset.proof)));
+      b.addEventListener('click', guard(() => proofFlow(c.id, b.dataset.proof))));
     scr.querySelectorAll('[data-delpay]').forEach(b =>
       b.addEventListener('click', () => {
         Store.removePayment(c.id, b.dataset.delpay);
@@ -325,7 +425,7 @@
       </div>
       <div class="field row2">
         <div>
-          <label>رقم الهوية / السجل *</label>
+          <label>رقم الهوية / السجل <span style="color:var(--ink-faint);font-weight:500">(اختياري)</span></label>
           <input id="f-nid" type="text" inputmode="numeric" dir="ltr" value="${esc(c.nationalId)}" placeholder="1xxxxxxxxx" />
         </div>
         <div>
@@ -362,7 +462,6 @@
       const nid = $('#f-nid').value.trim();
       const phone = $('#f-phone').value.trim();
       if (!name) { toast('الرجاء إدخال اسم العميل'); return; }
-      if (!nid) { toast('الرجاء إدخال رقم الهوية'); return; }
       if (!phone) { toast('الرجاء إدخال رقم الجوال'); return; }
       const payload = {
         id: id || undefined,
@@ -512,26 +611,21 @@
     const s = Store.settings();
     const settled = remainAfter <= 0;
 
-    toast('جارٍ إنشاء السند…');
-    const file = await Proof.build({
-      title: settled ? 'سند إخلاء طرف وسداد كامل' : 'سند استلام دفعة',
-      amountLabel: 'المبلغ المستلم',
-      ref: p.ref,
-      date: p.date,
-      clientName: c.name,
-      nationalId: c.nationalId,
-      phone: c.phone,
-      method: p.method,
-      note: p.note,
-      total: c.total,
-      paid: paidUpTo,
-      remaining: remainAfter,
-      amount: p.amount,
-      currency: s.currency,
-      collector: s.collector,
-      role: s.role,
-      phone_collector: s.phone
-    });
+    // شاشة انتظار: توليد الصورة قد يستغرق لحظة على الأجهزة البطيئة
+    openSheet(`
+      <h3>جارٍ إنشاء السند…</h3>
+      <p class="sub">لحظات من فضلك</p>
+      <div class="progress" style="margin:16px 0 8px"><i style="width:60%"></i></div>`);
+
+    let file;
+    try {
+      file = await buildProofImage(c, p, paidUpTo, remainAfter, settled, s);
+    } catch (e) {
+      console.error(e);
+      closeSheet();
+      toast('تعذّر إنشاء صورة السند — يمكنك إرسال النص فقط');
+      return;
+    }
 
     const tplKey = settled ? 'settlement' : 'proof';
     const text = fillTemplate(Store.templates()[tplKey].text, c, {
@@ -560,10 +654,37 @@
     body.querySelector('[data-x="cancel"]').addEventListener('click', closeSheet);
     body.querySelector('[data-x="save"]').addEventListener('click', () => { Proof.download(file); toast('تم حفظ صورة السند'); });
     body.querySelector('[data-x="wa"]').addEventListener('click', () => { openWhatsApp(c.phone, $('#pr-text').value); });
-    body.querySelector('[data-x="share"]').addEventListener('click', async () => {
+    body.querySelector('[data-x="share"]').addEventListener('click', guard(async () => {
       const res = await Proof.share(file, $('#pr-text').value);
       if (res === 'downloaded') toast('تم حفظ السند — أرفقه يدويًا في واتساب');
+    }));
+  }
+
+  /** توليد صورة السند مع تحرير الصورة السابقة من الذاكرة */
+  let lastProofUrl = null;
+  async function buildProofImage(c, p, paidUpTo, remainAfter, settled, s) {
+    if (lastProofUrl) { URL.revokeObjectURL(lastProofUrl); lastProofUrl = null; }
+    const file = await Proof.build({
+      title: settled ? 'سند إخلاء طرف وسداد كامل' : 'سند استلام دفعة',
+      amountLabel: 'المبلغ المستلم',
+      ref: p.ref,
+      date: p.date,
+      clientName: c.name,
+      nationalId: c.nationalId,
+      phone: c.phone,
+      method: p.method,
+      note: p.note,
+      total: c.total,
+      paid: paidUpTo,
+      remaining: remainAfter,
+      amount: p.amount,
+      currency: s.currency,
+      collector: s.collector,
+      role: s.role,
+      phone_collector: s.phone
     });
+    lastProofUrl = file.url;
+    return file;
   }
 
   /* ==================== اختيار عميل (الإجراءات السريعة) ==================== */
@@ -671,12 +792,12 @@
 
     $$('[data-goto]').forEach(b => b.addEventListener('click', () => go(b.dataset.goto)));
 
-    $$('[data-quick]').forEach(b => b.addEventListener('click', () => {
+    $$('[data-quick]').forEach(b => b.addEventListener('click', guard(() => {
       const k = b.dataset.quick;
       if (k === 'payment') pickClient(id => paymentForm(id), 'اختر العميل لتسجيل الدفعة');
       else if (k === 'proof') pickClient(id => proofFlow(id), 'اختر العميل لإصدار السند');
       else pickClient(id => composeMessage(id, k), k === 'welcome' ? 'اختر العميل للترحيب' : 'اختر العميل للتذكير');
-    }));
+    })));
 
     $('#resetTpl').addEventListener('click', () => { Store.resetTemplates(); renderTemplates(); toast('تمت استعادة النصوص الافتراضية'); });
 
@@ -735,6 +856,24 @@
     });
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+    // زر الرجوع في الجوال يغلق الورقة المنبثقة بدل مغادرة التطبيق
+    window.addEventListener('popstate', () => { if (sheetIsOpen()) closeSheet(); });
+
+    /* شبكات أمان ضد تعليق الواجهة */
+    window.addEventListener('error', e => {
+      if (document.documentElement.classList.contains('sheet-open') && !sheetIsOpen()) closeSheet();
+      console.error(e.error || e.message);
+    });
+    window.addEventListener('unhandledrejection', e => {
+      console.error(e.reason);
+      if (!sheetIsOpen()) closeSheet();
+    });
+    // عند العودة للتطبيق بعد الانتقال لواتساب: حرّر أي قفل تمرير عالق
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !sheetIsOpen()) closeSheet();
+    });
+    window.addEventListener('pageshow', () => { if (!sheetIsOpen()) closeSheet(); });
   }
 
   /* ==================== الإقلاع ==================== */

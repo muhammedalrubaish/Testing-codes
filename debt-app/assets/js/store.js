@@ -185,11 +185,23 @@ const Store = (() => {
   function remainingOf(c) { return Math.max(0, (+c.total || 0) - paidOf(c)); }
 
   function statusOf(c) {
-    if (remainingOf(c) <= 0) return 'paid';
+    if (c.settled) return 'paid';
+    // ملف بلا مبلغ مسجّل ولا دفعات لا يُعدّ مسدّدًا
+    if ((+c.total || 0) > 0 && remainingOf(c) <= 0) return 'paid';
     const d = c.dueDate ? new Date(c.dueDate + 'T00:00:00') : null;
     if (!d || isNaN(d)) return 'due';
     const today = new Date(); today.setHours(0, 0, 0, 0);
     return d < today ? 'late' : 'due';
+  }
+
+  /** تعليم الملف كمسدَّد بالكامل أو التراجع عن ذلك */
+  function setSettled(id, value) {
+    const c = client(id);
+    if (!c) return null;
+    c.settled = !!value;
+    c.settledAt = value ? new Date().toISOString().slice(0, 10) : '';
+    save();
+    return c;
   }
 
   function daysLate(c) {
@@ -260,7 +272,7 @@ const Store = (() => {
   return {
     clients, client, upsertClient, removeClient,
     addPayment, removePayment, nextRef,
-    paidOf, remainingOf, statusOf, daysLate,
+    paidOf, remainingOf, statusOf, daysLate, setSettled,
     settings, setSettings, templates, setTemplate, resetTemplates,
     exportJSON, importJSON, wipe, loadDemo
   };
