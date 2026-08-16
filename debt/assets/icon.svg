@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#6E7D54"/>
+  <circle cx="256" cy="222" r="120" fill="#EAF0DC"/>
+  <text x="256" y="272" font-family="Tahoma, sans-serif" font-size="150" font-weight="bold"
+        fill="#6E7D54" text-anchor="middle">ر</text>
+  <rect x="136" y="378" width="240" height="20" rx="10" fill="#C2D0A2"/>
+  <rect x="176" y="424" width="160" height="20" rx="10" fill="#A8BC85"/>
+</svg>
