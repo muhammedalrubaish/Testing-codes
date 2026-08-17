@@ -7,8 +7,8 @@ const Cloud = (() => {
   /* إعدادات المشروع — المفتاح العام (publishable) آمن للنشر:
      الحماية الحقيقية من سياسات RLS في قاعدة البيانات، فكل مستخدم
      لا يستطيع قراءة أو تعديل إلا صفوفه هو. */
-  const DEFAULT_URL = 'https://ipfcdiylsqbcnpgllzcd.supabase.co';
-  const DEFAULT_KEY = 'sb_publishable_OEoP5ruOPm1wvFgYXPia7A_H8A20Nmg';
+  const DEFAULT_URL = 'https://wforyjjgufaebdpayedz.supabase.co';
+  const DEFAULT_KEY = 'sb_publishable_vowAEM1IgST6tWesTZSzSw_84WQdF-K';
 
   const SESSION_KEY = 'tahseel.session';
   const CONFIG_KEY  = 'tahseel.cloudConfig';
