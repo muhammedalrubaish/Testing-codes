@@ -250,7 +250,7 @@
     if (c.settled) {
       // نحذف أيضًا دفعة التسوية التي أُنشئت تلقائيًا عند التعليم، وإلا بقي
       // الملف مسدَّدًا حسب سجل الدفعات ولم يتغيّر شيء ظاهريًا بعد الإلغاء
-      (c.payments || []).filter(p => p.auto).forEach(p => Store.removePayment(id, p.id));
+      Store.paymentsOf(c).filter(p => p.auto).forEach(p => Store.removePayment(id, p.id));
       Store.setSettled(id, false);
       toast('تم إرجاع الملف إلى المديونيات القائمة');
       refresh();
@@ -314,7 +314,8 @@
     const done = status === 'paid';
     const late = Store.daysLate(c);
 
-    const payments = (c.payments || []).map(p => `
+    const payList = Store.paymentsOf(c);
+    const payments = payList.map(p => `
       <div class="pay-row">
         <div class="dot"><svg><use href="#i-check"/></svg></div>
         <div class="pi">
@@ -379,7 +380,7 @@
       <div class="card">
         <div class="kv"><span>تاريخ الاستحقاق</span><b>${fmtDate(c.dueDate)}</b></div>
         <div class="kv"><span>قيمة القسط</span><b>${money(c.installment)} ${esc(cur())}</b></div>
-        <div class="kv"><span>عدد الدفعات</span><b>${(c.payments || []).length}</b></div>
+        <div class="kv"><span>عدد الدفعات</span><b>${payList.length}</b></div>
         ${c.notes ? `<div class="kv"><span>ملاحظات</span><b style="max-width:60%;text-align:left">${esc(c.notes)}</b></div>` : ''}
       </div>
 
@@ -588,7 +589,8 @@
   async function proofFlow(clientId, paymentId) {
     const c = Store.client(clientId);
     if (!c) return;
-    let p = paymentId ? (c.payments || []).find(x => x.id === paymentId) : (c.payments || [])[0];
+    const pays = Store.paymentsOf(c);
+    let p = paymentId ? pays.find(x => x.id === paymentId) : pays[0];
 
     if (!p) {
       openSheet(`
@@ -604,7 +606,7 @@
     }
 
     // المسدَّد حتى تاريخ هذه الدفعة (بترتيب السجل)
-    const list = (c.payments || []).slice().reverse();
+    const list = pays.slice().reverse();
     const idx = list.findIndex(x => x.id === p.id);
     const paidUpTo = list.slice(0, idx + 1).reduce((s, x) => s + (+x.amount || 0), 0);
     const remainAfter = Math.max(0, (+c.total || 0) - paidUpTo);
@@ -772,6 +774,143 @@
     $('#setCountry').value = s.countryCode;
     $('#themeToggle').classList.toggle('on', s.theme === 'dark');
     $('#proofToggle').classList.toggle('on', !!s.attachProof);
+    renderCloud();
+  }
+
+  /* ==================== قاعدة البيانات السحابية ==================== */
+  function syncAgeText() {
+    const { lastSyncAt } = Store.syncMeta();
+    if (!lastSyncAt) return 'لم تتم مزامنة بعد';
+    const mins = Math.round((Date.now() - new Date(lastSyncAt)) / 60000);
+    if (mins < 1) return 'آخر مزامنة: الآن';
+    if (mins < 60) return `آخر مزامنة: قبل ${mins} دقيقة`;
+    const hrs = Math.round(mins / 60);
+    if (hrs < 24) return `آخر مزامنة: قبل ${hrs} ساعة`;
+    return `آخر مزامنة: ${fmtDate(String(lastSyncAt).slice(0, 10))}`;
+  }
+
+  function renderCloud() {
+    const box = $('#cloudBody');
+    const pill = $('#cloudPill');
+    if (!box) return;
+
+    if (!Cloud.isSignedIn()) {
+      pill.className = 'pill due';
+      pill.textContent = 'غير مرتبط';
+      $('#cloudHint').textContent = 'اربط حسابك ليتم حفظ العملاء والدفعات في قاعدة بيانات آمنة، وتفتح ملفاتك من أي جهاز. بدون ربط يبقى كل شيء على هذا الجهاز فقط.';
+      box.innerHTML = `
+        <div class="field">
+          <label>البريد الإلكتروني</label>
+          <input id="cl-email" type="email" inputmode="email" dir="ltr" autocomplete="username" placeholder="name@example.com" />
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input id="cl-pass" type="password" dir="ltr" autocomplete="current-password" placeholder="6 أحرف على الأقل" />
+        </div>
+        <div class="sheet-actions">
+          <button class="btn ghost" data-cl="signup">حساب جديد</button>
+          <button class="btn" data-cl="signin">تسجيل الدخول</button>
+        </div>`;
+      box.querySelector('[data-cl="signin"]').addEventListener('click', guard(() => cloudAuth('signin')));
+      box.querySelector('[data-cl="signup"]').addEventListener('click', guard(() => cloudAuth('signup')));
+      return;
+    }
+
+    const st = Sync.get();
+    const busy = st.status === 'syncing';
+    pill.className = 'pill ' + (st.status === 'error' ? 'late' : st.status === 'syncing' ? 'due' : 'paid');
+    pill.textContent = st.status === 'error' ? 'خطأ' : busy ? 'جارٍ المزامنة' : 'مرتبط';
+    $('#cloudHint').textContent = st.status === 'error'
+      ? st.message
+      : `${Cloud.user().email} · ${syncAgeText()}`;
+
+    box.innerHTML = `
+      <div class="sheet-actions">
+        <button class="btn" data-cl="sync" ${busy ? 'disabled' : ''}>
+          <svg><use href="#i-share"/></svg> ${busy ? 'جارٍ المزامنة…' : 'مزامنة الآن'}
+        </button>
+        <button class="btn outline" data-cl="signout">خروج</button>
+      </div>
+      <button class="btn ghost block" style="margin-top:10px" data-cl="passwd">تغيير كلمة المرور</button>`;
+
+    box.querySelector('[data-cl="sync"]').addEventListener('click', guard(async () => {
+      try { await Sync.run(); toast('تمت المزامنة'); }
+      catch (e) { toast(e.message || 'تعذّرت المزامنة'); }
+      refresh();
+    }));
+    box.querySelector('[data-cl="signout"]').addEventListener('click', guard(() => cloudSignOut()));
+    box.querySelector('[data-cl="passwd"]').addEventListener('click', () => changePasswordForm());
+  }
+
+  async function cloudAuth(mode) {
+    const email = $('#cl-email').value.trim();
+    const pass = $('#cl-pass').value;
+    if (!email || !email.includes('@')) { toast('أدخل بريدًا إلكترونيًا صحيحًا'); return; }
+    if (!pass || pass.length < 6) { toast('كلمة المرور 6 أحرف على الأقل'); return; }
+
+    toast(mode === 'signup' ? 'جارٍ إنشاء الحساب…' : 'جارٍ تسجيل الدخول…');
+    try {
+      if (mode === 'signup') {
+        const r = await Cloud.signUp(email, pass);
+        if (!r.signedIn) {
+          toast('تم إنشاء الحساب — افتح بريدك واضغط رابط التأكيد ثم سجّل الدخول');
+          return;
+        }
+      } else {
+        await Cloud.signIn(email, pass);
+      }
+    } catch (e) {
+      toast(e.message || 'تعذّر تسجيل الدخول');
+      return;
+    }
+
+    renderCloud();
+    toast('جارٍ رفع بياناتك…');
+    try {
+      const r = await Sync.firstSync();
+      toast(`تم الربط · رُفع ${r.pushed || 0} سجل`);
+    } catch (e) {
+      toast('تم تسجيل الدخول، لكن تعذّرت المزامنة: ' + (e.message || ''));
+    }
+    refresh();
+  }
+
+  function cloudSignOut() {
+    openSheet(`
+      <h3>الخروج من الحساب</h3>
+      <p class="sub">ستبقى بياناتك محفوظة في قاعدة البيانات وعلى هذا الجهاز، ويتوقف المزامنة حتى تسجّل الدخول مجددًا.</p>
+      <div class="sheet-actions">
+        <button class="btn outline" data-x="cancel">تراجع</button>
+        <button class="btn danger" data-x="ok">خروج</button>
+      </div>`);
+    $('#sheetBody').querySelector('[data-x="cancel"]').addEventListener('click', closeSheet);
+    $('#sheetBody').querySelector('[data-x="ok"]').addEventListener('click', guard(async () => {
+      await Cloud.signOut();
+      closeSheet();
+      toast('تم الخروج');
+      renderCloud();
+    }));
+  }
+
+  function changePasswordForm() {
+    openSheet(`
+      <h3>تغيير كلمة المرور</h3>
+      <p class="sub">${esc(Cloud.user().email)}</p>
+      <div class="field">
+        <label>كلمة المرور الجديدة</label>
+        <input id="pw-new" type="password" dir="ltr" placeholder="6 أحرف على الأقل" />
+      </div>
+      <div class="sheet-actions">
+        <button class="btn outline" data-x="cancel">إلغاء</button>
+        <button class="btn" data-x="ok">حفظ</button>
+      </div>`);
+    $('#sheetBody').querySelector('[data-x="cancel"]').addEventListener('click', closeSheet);
+    $('#sheetBody').querySelector('[data-x="ok"]').addEventListener('click', guard(async () => {
+      const v = $('#pw-new').value;
+      if (!v || v.length < 6) { toast('كلمة المرور 6 أحرف على الأقل'); return; }
+      try { await Cloud.changePassword(v); closeSheet(); toast('تم تغيير كلمة المرور'); }
+      catch (e) { toast(e.message || 'تعذّر التغيير'); }
+    }));
   }
 
   /* ==================== الربط ==================== */
@@ -880,4 +1019,16 @@
   applyTheme(Store.settings().theme || 'light');
   bind();
   go('home');
+
+  /* ==================== المزامنة السحابية ==================== */
+  // أي تعديل محلي يُرفع تلقائيًا بعد لحظات (مع تجميع التعديلات المتتالية)
+  Store.onChange(() => Sync.schedule());
+
+  Sync.on(st => {
+    if (state.tab === 'settings') renderCloud();
+    if (st.status === 'ok') refresh();
+    if (st.status === 'error' && st.message) console.warn('مزامنة:', st.message);
+  });
+
+  Sync.start();
 })();
