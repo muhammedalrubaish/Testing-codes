@@ -1,13 +1,15 @@
 /* عامل الخدمة — تخزين مؤقت للعمل دون اتصال
    السياسة: الشبكة أولًا للملفات الأساسية (حتى تصل التحديثات فورًا ولا تعلق
    نسخة قديمة في ذاكرة الجهاز)، مع الرجوع للنسخة المخزّنة عند انقطاع الاتصال. */
-const CACHE = 'tahseel-v2';
+const CACHE = 'tahseel-v3';
 const ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
   './assets/css/app.css',
+  './assets/js/cloud.js',
   './assets/js/store.js',
+  './assets/js/sync.js',
   './assets/js/proof.js',
   './assets/js/app.js',
   './assets/img/icon.svg'
